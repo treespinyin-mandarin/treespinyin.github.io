@@ -3,118 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的汉字学习库</title>
-    <!-- 引入解析CSV的库 -->
-        <script>
-        let allData = [];
-        Papa.parse("_data/words.csv", {
-            download: true,
-            header: true,
-            skipEmptyLines: true,
-            complete: function(results) {
-                allData = results.data;
-                renderTable(allData);
-            }
-        });
-
-        function renderTable(data) {
-            const tbody = document.querySelector("#wordTable tbody");
-            // 注意：这里的 row.xxx 必须和 CSV 第一行的名字完全对应
-            tbody.innerHTML = data.map(row => `
-                <tr>
-                    <td><b style="font-size:1.2em">${row.汉字 || ''}</b></td>
-                    <td class="pinyin">${row.拼音 || ''}</td>
-                    <td>${row.英文含义 || ''}</td>
-                    <td>${row.组词 || ''}<br><small>(${row.组词英文 || ''})</small></td>
-                    <td class="sentence">
-                        ${row.造句 || ''}<br>
-                        <span class="en-sentence">${row.造句英文 || ''}</span>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function filterData() {
-            const term = document.getElementById("searchInput").value.toUpperCase();
-            const filtered = allData.filter(row => 
-                Object.values(row).some(val => String(val).toUpperCase().includes(term))
-            );
-            renderTable(filtered);
-        }
-    </script>
-
+    <title>汉字库搜索</title>
+    <!-- 1. 确保库文件在最上方加载 -->
+    <script src="https://cdnjs.cloudflare.com"></script>
     <style>
-        body { font-family: 'PingFang SC', sans-serif; margin: 20px; background: #f0f2f5; color: #333; }
-        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #2c3e50; }
-        input { width: 100%; padding: 12px; margin: 20px 0; border: 2px solid #4CAF50; border-radius: 4px; font-size: 16px; box-sizing: border-box; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 15px; border: 1px solid #eee; text-align: left; }
-        th { background: #4CAF50; color: white; white-space: nowrap; }
-        tr:hover { background: #f9f9f9; }
+        body { font-family: sans-serif; margin: 20px; background: #f4f7f6; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        input { width: 100%; padding: 15px; margin: 20px 0; border: 2px solid #4CAF50; border-radius: 5px; font-size: 18px; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; border: 1px solid #eee; text-align: left; }
+        th { background: #4CAF50; color: white; }
+        tr:nth-child(even) { background: #fafafa; }
         .pinyin { color: #e67e22; font-weight: bold; }
-        .sentence { font-size: 0.9em; color: #666; }
-        .en-sentence { color: #3498db; font-size: 0.85em; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>我的汉字学习库</h1>
-        <input type="text" id="searchInput" onkeyup="filterData()" placeholder="🔍 搜索汉字、拼音或英文...">
-        
+        <h1>汉字搜索库</h1>
+        <input type="text" id="searchInput" placeholder="🔍 输入汉字、拼音或英文直接搜索...">
         <table id="wordTable">
             <thead>
-                <tr>
-                    <th>汉字</th>
-                    <th>拼音</th>
-                    <th>意思</th>
-                    <th>组词</th>
-                    <th>造句</th>
-                </tr>
+                <tr><th>汉字</th><th>拼音</th><th>含义</th><th>组词</th><th>造句</th></tr>
             </thead>
-            <tbody>
-                <!-- 数据将通过 JavaScript 自动加载到这里 -->
-            </tbody>
+            <tbody></tbody>
         </table>
     </div>
 
     <script>
-        let allData = [];
+        // 核心：使用 window.onload 确保 PapaParse 库加载完再运行
+        window.onload = function() {
+            let dictionary = [];
+            const searchInput = document.getElementById('searchInput');
+            const tbody = document.querySelector('#wordTable tbody');
 
-        // 使用 PapaParse 直接读取仓库里的 CSV
-        Papa.parse("_data/words.csv", {
-            download: true,
-            header: true,
-            skipEmptyLines: true,
-            complete: function(results) {
-                allData = results.data;
-                renderTable(allData);
+            // 2. 开始抓取 CSV 数据
+            Papa.parse("_data/words.csv", {
+                download: true,
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    dictionary = results.data;
+                    render(dictionary); // 初始显示全部
+                },
+                error: function(err) {
+                    console.error("CSV加载失败，请检查路径:", err);
+                }
+            });
+
+            // 3. 渲染表格函数
+            function render(data) {
+                tbody.innerHTML = data.map(row => `
+                    <tr>
+                        <td><b style="font-size:1.5em">${row.汉字 || ''}</b></td>
+                        <td class="pinyin">${row.拼音 || ''}</td>
+                        <td>${row.英文含义 || ''}</td>
+                        <td>${row.组词 || ''}<br><small>(${row.组词英文 || ''})</small></td>
+                        <td>${row.造句 || ''}<br><small style="color:#666">${row.造句英文 || ''}</small></td>
+                    </tr>
+                `).join('');
             }
-        });
 
-        function renderTable(data) {
-            const tbody = document.querySelector("#wordTable tbody");
-            tbody.innerHTML = data.map(row => `
-                <tr>
-                    <td><b style="font-size:1.2em">${row.汉字 || ''}</b></td>
-                    <td class="pinyin">${row.拼音 || ''}</td>
-                    <td>${row.英语意思 || ''}</td>
-                    <td>${row.汉字组词 || ''}<br><small>(${row.组词英语意思 || ''})</small></td>
-                    <td class="sentence">
-                        ${row.汉字造句 || ''}<br>
-                        <span class="en-sentence">${row.造句英语意思 || ''}</span>
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function filterData() {
-            const term = document.getElementById("searchInput").value.toUpperCase();
-            const filtered = allData.filter(row => 
-                Object.values(row).some(val => String(val).toUpperCase().includes(term))
-            );
-            renderTable(filtered);
-        }
+            // 4. 实时搜索监听
+            searchInput.addEventListener('input', function() {
+                const term = this.value.toUpperCase();
+                const filtered = dictionary.filter(row => 
+                    Object.values(row).some(val => String(val).toUpperCase().includes(term))
+                );
+                render(filtered);
+            });
+        };
     </script>
 </body>
 </html>
