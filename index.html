@@ -1,44 +1,83 @@
----
-layout: default
-title: 我的汉字学习库
----
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>汉字学习列表</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的汉字学习库</title>
+    <!-- 引入解析CSV的库 -->
+    <script src="https://cdnjs.cloudflare.com"></script>
     <style>
-        body { font-family: sans-serif; margin: 40px; background: #f4f7f6; }
-        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #4CAF50; color: white; }
-        tr:nth-child(even) { background-color: #f2f2f2; }
-        .pinyin { color: #666; font-style: italic; }
+        body { font-family: 'PingFang SC', sans-serif; margin: 20px; background: #f0f2f5; color: #333; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #2c3e50; }
+        input { width: 100%; padding: 12px; margin: 20px 0; border: 2px solid #4CAF50; border-radius: 4px; font-size: 16px; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 15px; border: 1px solid #eee; text-align: left; }
+        th { background: #4CAF50; color: white; white-space: nowrap; }
+        tr:hover { background: #f9f9f9; }
+        .pinyin { color: #e67e22; font-weight: bold; }
+        .sentence { font-size: 0.9em; color: #666; }
+        .en-sentence { color: #3498db; font-size: 0.85em; }
     </style>
 </head>
 <body>
-    <h1>我的 20 个常用汉字库</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>汉字</th>
-                <th>拼音</th>
-                <th>英语意思</th>
-                <th>汉字组词</th>
-                <th>造句</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in site.data.words %}
-            <tr>
-                <td><strong>{{ row.汉字 }}</strong></td>
-                <td class="pinyin">{{ row.拼音 }}</td>
-                <td>{{ row.英语意思 }}</td>
-                <td>{{ row.汉字组词 }} ({{ row.组词英语意思 }})</td>
-                <td>{{ row.汉字造句 }}<br><small style="color:blue">{{ row.造句英语意思 }}</small></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="container">
+        <h1>我的汉字学习库</h1>
+        <input type="text" id="searchInput" onkeyup="filterData()" placeholder="🔍 搜索汉字、拼音或英文...">
+        
+        <table id="wordTable">
+            <thead>
+                <tr>
+                    <th>汉字</th>
+                    <th>拼音</th>
+                    <th>意思</th>
+                    <th>组词</th>
+                    <th>造句</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- 数据将通过 JavaScript 自动加载到这里 -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let allData = [];
+
+        // 使用 PapaParse 直接读取仓库里的 CSV
+        Papa.parse("_data/words.csv", {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                allData = results.data;
+                renderTable(allData);
+            }
+        });
+
+        function renderTable(data) {
+            const tbody = document.querySelector("#wordTable tbody");
+            tbody.innerHTML = data.map(row => `
+                <tr>
+                    <td><b style="font-size:1.2em">${row.汉字 || ''}</b></td>
+                    <td class="pinyin">${row.拼音 || ''}</td>
+                    <td>${row.英语意思 || ''}</td>
+                    <td>${row.汉字组词 || ''}<br><small>(${row.组词英语意思 || ''})</small></td>
+                    <td class="sentence">
+                        ${row.汉字造句 || ''}<br>
+                        <span class="en-sentence">${row.造句英语意思 || ''}</span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function filterData() {
+            const term = document.getElementById("searchInput").value.toUpperCase();
+            const filtered = allData.filter(row => 
+                Object.values(row).some(val => String(val).toUpperCase().includes(term))
+            );
+            renderTable(filtered);
+        }
+    </script>
 </body>
 </html>
