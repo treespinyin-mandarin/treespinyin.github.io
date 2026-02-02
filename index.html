@@ -5,7 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>我的汉字学习库</title>
     <!-- 引入解析CSV的库 -->
-    <script src="https://cdnjs.cloudflare.com"></script>
+        <script>
+        let allData = [];
+        Papa.parse("_data/words.csv", {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                allData = results.data;
+                renderTable(allData);
+            }
+        });
+
+        function renderTable(data) {
+            const tbody = document.querySelector("#wordTable tbody");
+            // 注意：这里的 row.xxx 必须和 CSV 第一行的名字完全对应
+            tbody.innerHTML = data.map(row => `
+                <tr>
+                    <td><b style="font-size:1.2em">${row.汉字 || ''}</b></td>
+                    <td class="pinyin">${row.拼音 || ''}</td>
+                    <td>${row.英文含义 || ''}</td>
+                    <td>${row.组词 || ''}<br><small>(${row.组词英文 || ''})</small></td>
+                    <td class="sentence">
+                        ${row.造句 || ''}<br>
+                        <span class="en-sentence">${row.造句英文 || ''}</span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function filterData() {
+            const term = document.getElementById("searchInput").value.toUpperCase();
+            const filtered = allData.filter(row => 
+                Object.values(row).some(val => String(val).toUpperCase().includes(term))
+            );
+            renderTable(filtered);
+        }
+    </script>
+
     <style>
         body { font-family: 'PingFang SC', sans-serif; margin: 20px; background: #f0f2f5; color: #333; }
         .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
