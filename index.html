@@ -3,76 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>汉字库搜索</title>
-    <!-- 引入 PapaParse -->
+    <title>汉字万词搜索库</title>
+    <!-- 引入解析库 -->
     <script src="https://cdnjs.cloudflare.com"></script>
     <style>
-        body { font-family: sans-serif; margin: 20px; background: #f4f7f6; }
-        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        input { width: 100%; padding: 15px; margin: 20px 0; border: 2px solid #4CAF50; border-radius: 5px; font-size: 18px; box-sizing: border-box; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; border: 1px solid #eee; text-align: left; }
-        th { background: #4CAF50; color: white; }
-        .pinyin { color: #e67e22; font-weight: bold; }
+        :root { --primary-color: #2ecc71; --bg-color: #f8f9fa; }
+        body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--bg-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 900px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h1 { color: #2c3e50; text-align: center; margin-bottom: 25px; font-size: 1.8em; }
+        .search-box { position: sticky; top: 10px; z-index: 100; background: white; padding: 5px 0; }
+        input { width: 100%; padding: 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 16px; transition: border-color 0.3s; box-sizing: border-box; outline: none; }
+        input:focus { border-color: var(--primary-color); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: var(--primary-color); color: white; padding: 15px; text-align: left; position: sticky; top: 80px; }
+        td { padding: 15px; border-bottom: 1px solid #eee; line-height: 1.6; }
+        tr:hover { background: #fdfdfd; }
+        .pinyin { color: #d35400; font-weight: 600; font-family: 'Courier New', monospace; }
+        .meaning { color: #2980b9; font-weight: 500; }
+        .example { font-size: 0.9em; color: #7f8c8d; background: #f9f9f9; padding: 5px 8px; border-left: 3px solid #ddd; }
+        .status-msg { text-align: center; color: #95a5a6; margin-top: 20px; font-size: 0.9em; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>汉字搜索库</h1>
-        <input type="text" id="searchInput" placeholder="🔍 输入汉字、拼音或英文直接搜索...">
-        <table id="wordTable">
-            <thead>
-                <tr><th>汉字</th><th>拼音</th><th>含义</th><th>组词</th><th>造句</th></tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+
+<div class="container">
+    <h1>📚 汉字万词搜索库</h1>
+    
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="🔍 输入汉字、拼音或英文搜索... (万词秒搜)">
     </div>
 
-    <script>
-        (function init() {
-            // 解决 "Papa is not defined" 的核心逻辑：循环检查库是否加载
-            if (typeof Papa === 'undefined') {
-                console.log("正在等待库加载...");
-                setTimeout(init, 100); 
+    <table id="wordTable">
+        <thead>
+            <tr>
+                <th width="15%">汉字</th>
+                <th width="15%">拼音</th>
+                <th width="20%">含义</th>
+                <th width="20%">组词</th>
+                <th width="30%">造句</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <!-- 数据加载中... -->
+        </tbody>
+    </table>
+    <div id="status" class="status-msg">正在加载云端数据...</div>
+</div>
+
+<script>
+    let dictionary = [];
+    let searchTimer = null;
+
+    // 1. 解决加载顺序问题
+    function startApp() {
+        if (typeof Papa === 'undefined') {
+            setTimeout(startApp, 100);
+            return;
+        }
+        loadData();
+    }
+
+    // 2. 动态读取本地 CSV (支持 Cloudflare 部署路径)
+    function loadData() {
+        // 使用相对路径，确保在 Cloudflare 根目录下正常读取
+        const csvPath = "./_data/words.csv";
+        
+        Papa.parse(csvPath, {
+            download: true,
+            header: true,
+            skipEmptyLines: true,
+            encoding: "UTF-8",
+            complete: function(results) {
+                dictionary = results.data;
+                document.getElementById('status').innerText = `已加载 ${dictionary.length} 个词条`;
+                render(dictionary);
+            },
+            error: function(err) {
+                document.getElementById('status').innerHTML = `<b style="color:red">加载失败:</b> 请确保文件存放在 _data/words.csv`;
+                console.error("CSV Load Error:", err);
+            }
+        });
+    }
+
+    // 3. 渲染函数 (优化大批量数据展示)
+    function render(data) {
+        const tbody = document.getElementById('tableBody');
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">未找到相关词条</td></tr>';
+            return;
+        }
+
+        // 只渲染匹配的前 200 条，保证搜索瞬间不卡顿，万词库必备
+        const displayData = data.slice(0, 200);
+        
+        tbody.innerHTML = displayData.map(row => `
+            <tr>
+                <td><strong style="font-size:1.4em; color:#2c3e50;">${row.汉字 || ''}</strong></td>
+                <td class="pinyin">${row.拼音 || ''}</td>
+                <td class="meaning">${row.英文含义 || ''}</td>
+                <td>
+                    <b>${row.组词 || ''}</b><br>
+                    <small style="color:#7f8c8d">${row.组词英文 || ''}</small>
+                </td>
+                <td>
+                    <div class="example">
+                        ${row.造句 || ''}<br>
+                        <i style="color:#3498db; font-size:0.85em;">${row.造句英文 || ''}</i>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // 4. 防抖搜索监听 (搜索万词库不卡顿的关键)
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        clearTimeout(searchTimer);
+        const term = e.target.value.trim().toUpperCase();
+        
+        searchTimer = setTimeout(() => {
+            if (!term) {
+                render(dictionary);
                 return;
             }
+            const filtered = dictionary.filter(row => 
+                Object.values(row).some(val => String(val).toUpperCase().includes(term))
+            );
+            render(filtered);
+        }, 150); // 150ms 延迟，避免打字过快导致的频繁计算
+    });
 
-            let dictionary = [];
-            const searchInput = document.getElementById('searchInput');
-            const tbody = document.querySelector('#wordTable tbody');
+    // 启动
+    startApp();
+</script>
 
-            // 读取数据
-            Papa.parse("_data/words.csv", {
-                download: true,
-                header: true,
-                skipEmptyLines: true,
-                complete: function(results) {
-                    dictionary = results.data;
-                    render(dictionary);
-                    console.log("数据加载成功！");
-                }
-            });
-
-            function render(data) {
-                tbody.innerHTML = data.map(row => `
-                    <tr>
-                        <td><b style="font-size:1.5em">${row.汉字 || ''}</b></td>
-                        <td class="pinyin">${row.拼音 || ''}</td>
-                        <td>${row.英文含义 || ''}</td>
-                        <td>${row.组词 || ''}<br><small>(${row.组词英文 || ''})</small></td>
-                        <td>${row.造句 || ''}<br><small style="color:#666">${row.造句英文 || ''}</small></td>
-                    </tr>
-                `).join('');
-            }
-
-            searchInput.addEventListener('input', function() {
-                const term = this.value.toUpperCase();
-                const filtered = dictionary.filter(row => 
-                    Object.values(row).some(val => String(val).toUpperCase().includes(term))
-                );
-                render(filtered);
-            });
-        })();
-    </script>
 </body>
 </html>
