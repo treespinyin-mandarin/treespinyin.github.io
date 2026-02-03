@@ -4,93 +4,98 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>汉字万词搜索库</title>
-    <!-- 引入解析库 -->
+    <!-- 引入 PapaParse 解析库 -->
     <script src="https://cdnjs.cloudflare.com"></script>
     <style>
         :root { --main-green: #27ae60; --bg-gray: #f9f9f9; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg-gray); margin: 0; padding: 15px; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg-gray); margin: 0; padding: 15px; }
         .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         h1 { color: #2c3e50; text-align: center; font-size: 1.6em; margin-bottom: 20px; }
         
-        /* 搜索框美化 */
-        .search-area { position: sticky; top: 0; background: white; padding: 10px 0; z-index: 10; }
+        /* 搜索框固定在顶部 */
+        .search-area { position: sticky; top: 0; background: white; padding: 10px 0; z-index: 10; border-bottom: 1px solid #eee; }
         input { width: 100%; padding: 14px; border: 2px solid #eee; border-radius: 8px; font-size: 16px; outline: none; box-sizing: border-box; transition: 0.3s; }
         input:focus { border-color: var(--main-green); box-shadow: 0 0 8px rgba(39,174,96,0.2); }
 
-        /* 表格样式 */
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        /* 表格响应式 */
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; min-width: 600px; }
         th { background: var(--main-green); color: white; padding: 12px; text-align: left; font-size: 14px; }
         td { padding: 12px; border-bottom: 1px solid #f0f0f0; vertical-align: top; font-size: 15px; }
         
-        /* 文本细节 */
-        .char-cell { font-size: 1.5em; font-weight: bold; color: #333; }
-        .pinyin { color: #d35400; font-family: "Courier New", Courier, monospace; font-weight: 600; }
+        /* 数据显示细节 */
+        .char-cell { font-size: 1.6em; font-weight: bold; color: #333; }
+        .pinyin { color: #d35400; font-weight: 600; font-family: 'Courier New', monospace; }
         .meaning { color: #2980b9; }
-        .phrase { font-weight: 500; color: #2c3e50; }
-        .example-box { font-size: 0.9em; color: #666; line-height: 1.5; background: #fdfdfd; border-left: 3px solid #eee; padding-left: 8px; }
+        .phrase-box b { color: #2c3e50; display: block; margin-bottom: 4px; }
+        .example-box { font-size: 0.9em; color: #666; line-height: 1.5; background: #fdfdfd; border-left: 3px solid #4CAF50; padding: 5px 8px; }
         .status { text-align: center; color: #999; font-size: 0.85em; margin-top: 20px; }
-
-        /* 移动端优化 */
-        @media (max-width: 600px) {
-            th:nth-child(4), td:nth-child(4) { display: none; } /* 手机端隐藏组词，节省空间 */
-            .container { padding: 10px; }
-        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>📚 汉字万词库</h1>
+    <h1>📚 汉字万词搜索库</h1>
     
     <div class="search-area">
-        <input type="text" id="searchInput" placeholder="🔍 输入汉字、拼音或英文直接搜索...">
+        <input type="text" id="searchInput" placeholder="🔍 直接输入汉字、拼音或英文搜索...">
     </div>
 
-    <table id="wordTable">
-        <thead>
-            <tr>
-                <th width="15%">汉字</th>
-                <th width="15%">拼音</th>
-                <th width="20%">意思</th>
-                <th width="20%">组词</th>
-                <th width="30%">造句</th>
-            </tr>
-        </thead>
-        <tbody id="tbody">
-            <tr><td colspan="5" style="text-align:center; color:#999;">正在同步云端数据...</td></tr>
-        </tbody>
-    </table>
+    <div class="table-wrapper">
+        <table id="wordTable">
+            <thead>
+                <tr>
+                    <th width="12%">汉字</th>
+                    <th width="15%">拼音</th>
+                    <th width="18%">含义</th>
+                    <th width="20%">组词</th>
+                    <th width="35%">造句</th>
+                </tr>
+            </thead>
+            <tbody id="tbody">
+                <tr><td colspan="5" style="text-align:center;">正在同步云端数据，请稍候...</td></tr>
+            </tbody>
+        </table>
+    </div>
     <div id="countInfo" class="status"></div>
 </div>
 
 <script>
     let wordsData = [];
 
-    // 核心加载函数
+    // 初始化并加载 CSV
     function init() {
         if (typeof Papa === 'undefined') {
             setTimeout(init, 100);
             return;
         }
 
-        // 直接锁定新路径：data/words.csv
+        // 读取 data 文件夹下的 words.csv
         Papa.parse("data/words.csv", {
             download: true,
             header: true,
             skipEmptyLines: true,
             encoding: "UTF-8",
             complete: function(results) {
-                wordsData = results.data;
+                // 核心修复：自动清理表头中可能存在的空格、换行符
+                wordsData = results.data.map(item => {
+                    let cleanedItem = {};
+                    for (let key in item) {
+                        cleanedItem[key.trim()] = item[key] ? item[key].trim() : "";
+                    }
+                    return cleanedItem;
+                });
+                
                 updateCount(wordsData.length);
                 render(wordsData);
             },
-            error: function(err) {
-                document.getElementById('tbody').innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">❌ 读取失败：请检查 GitHub 仓库中是否有 data/words.csv 文件夹和文件</td></tr>`;
+            error: function() {
+                document.getElementById('tbody').innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">❌ 数据读取失败：请确保路径为 data/words.csv 且包含正确表头</td></tr>`;
             }
         });
     }
 
-    // 渲染函数
+    // 渲染表格内容
     function render(list) {
         const tbody = document.getElementById('tbody');
         if (list.length === 0) {
@@ -98,20 +103,20 @@
             return;
         }
 
-        // 仅渲染前300条保证性能
+        // 仅渲染前300条保证极端情况下的性能
         const safeList = list.slice(0, 300);
         tbody.innerHTML = safeList.map(item => `
             <tr>
-                <td class="char-cell">${item.汉字 || ''}</td>
-                <td class="pinyin">${item.拼音 || ''}</td>
-                <td class="meaning">${item.英文含义 || ''}</td>
-                <td>
-                    <span class="phrase">${item.组词 || ''}</span><br>
-                    <small style="color:#999">${item.组词英文 || ''}</small>
+                <td class="char-cell">${item.汉字 || '-'}</td>
+                <td class="pinyin">${item.拼音 || '-'}</td>
+                <td class="meaning">${item.英文含义 || '-'}</td>
+                <td class="phrase-box">
+                    <b>${item.组词 || '-'}</b>
+                    <small style="color:#888">${item.组词英文 || ''}</small>
                 </td>
                 <td>
                     <div class="example-box">
-                        ${item.造句 || ''}<br>
+                        ${item.造句 || '-'}<br>
                         <i style="color:#3498db; font-size:0.85em">${item.造句英文 || ''}</i>
                     </div>
                 </td>
@@ -119,9 +124,15 @@
         `).join('');
     }
 
-    // 搜索逻辑
+    // 搜索过滤逻辑
     document.getElementById('searchInput').addEventListener('input', function(e) {
         const val = e.target.value.trim().toUpperCase();
+        if(!val) {
+            render(wordsData);
+            updateCount(wordsData.length);
+            return;
+        }
+        
         const filtered = wordsData.filter(item => 
             Object.values(item).some(s => String(s).toUpperCase().includes(val))
         );
@@ -130,9 +141,10 @@
     });
 
     function updateCount(n) {
-        document.getElementById('countInfo').innerText = `当前检索到 ${n} 条词汇`;
+        document.getElementById('countInfo').innerText = `检索到 ${n} 个相关词汇`;
     }
 
+    // 启动程序
     init();
 </script>
 
