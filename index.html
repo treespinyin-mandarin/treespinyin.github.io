@@ -4,95 +4,145 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>汉字万词搜索库</title>
-    <script src="https://cdnjs.cloudflare.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        :root { --main: #27ae60; }
-        body { font-family: sans-serif; background: #f9f9f9; margin: 0; padding: 15px; }
-        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .search-area { position: sticky; top: 0; background: white; padding: 10px 0; z-index: 10; }
-        input { width: 100%; padding: 14px; border: 2px solid #eee; border-radius: 8px; font-size: 16px; outline: none; box-sizing: border-box; }
-        input:focus { border-color: var(--main); }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { background: var(--main); color: white; padding: 12px; text-align: left; }
-        td { padding: 12px; border-bottom: 1px solid #f0f0f0; }
-        .char { font-size: 1.6em; font-weight: bold; }
-        .status { text-align: center; color: #999; margin-top: 20px; font-size: 0.8em; }
+        :root { --main: #27ae60; --bg: #f4f7f6; }
+        body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #333; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+        h1 { text-align: center; color: var(--main); margin-bottom: 20px; }
+        
+        .search-area { position: sticky; top: 0; background: white; padding: 15px 0; z-index: 10; border-bottom: 1px solid #eee; }
+        input { width: 100%; padding: 16px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 18px; outline: none; transition: all 0.3s; box-sizing: border-box; }
+        input:focus { border-color: var(--main); box-shadow: 0 0 8px rgba(39, 174, 96, 0.2); }
+
+        .table-wrapper { overflow-x: auto; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { background: var(--main); color: white; padding: 15px; text-align: left; position: sticky; top: 0; }
+        td { padding: 15px; border-bottom: 1px solid #f0f0f0; line-height: 1.6; }
+        
+        .char { font-size: 2em; font-weight: bold; color: #2c3e50; }
+        .pinyin { color: #d35400; font-weight: bold; font-size: 1.1em; }
+        .english { color: #2980b9; font-weight: 500; }
+        .status { text-align: center; color: #7f8c8d; margin-top: 20px; font-size: 0.9em; padding: 20px; }
+        
+        /* 简单动画 */
+        tr { transition: background 0.2s; }
+        tr:hover { background: #f9fffb; }
+        @media (max-width: 600px) { .char { font-size: 1.5em; } td { padding: 10px; font-size: 14px; } }
     </style>
 </head>
 <body>
+
 <div class="container">
     <h1>📚 汉字万词库</h1>
+    
     <div class="search-area">
-        <input type="text" id="searchInput" placeholder="🔍 搜汉字、拼音或英文...">
+        <input type="text" id="searchInput" placeholder="🔍 输入汉字、拼音或英文含义搜索...">
     </div>
-    <table id="wordTable">
-        <thead><tr><th>汉字</th><th>拼音</th><th>意思</th><th>组词</th><th>造句</th></tr></thead>
-        <tbody id="tbody"><tr><td colspan="5" id="loader" style="text-align:center;">正在同步云端数据，请稍候...</td></tr></tbody>
-    </table>
+
+    <div class="table-wrapper">
+        <table id="wordTable">
+            <thead>
+                <tr>
+                    <th>汉字</th>
+                    <th>拼音</th>
+                    <th>意思 (English)</th>
+                    <th>组词 & 解释</th>
+                </tr>
+            </thead>
+            <tbody id="tbody">
+                <tr><td colspan="4" id="loader" style="text-align:center; padding: 40px;">⏳ 正在努力加载云端词库...</td></tr>
+            </tbody>
+        </table>
+    </div>
     <div id="countInfo" class="status"></div>
 </div>
 
 <script>
     let wordsData = [];
-    
+
+    // 智能获取数据路径
+    function getCsvPath() {
+        // 如果是自定义域名，通常在根目录；如果是 github.io/repo，需要相对路径
+        return "data/words.csv"; 
+    }
+
     function init() {
-        if (typeof Papa === 'undefined') { setTimeout(init, 100); return; }
-        
-        // 核心改动：尝试直接从域名根路径读取，增加失败后的具体报错
-        Papa.parse("/data/words.csv", {
+        if (typeof Papa === 'undefined') {
+            setTimeout(init, 200);
+            return;
+        }
+
+        Papa.parse(getCsvPath(), {
             download: true,
             header: true,
             skipEmptyLines: true,
             encoding: "UTF-8",
             complete: function(results) {
-                // 清理表头空格
-                wordsData = results.data.map(item => {
-                    let clean = {};
-                    for (let key in item) { clean[key.trim()] = item[key]; }
-                    return clean;
+                // 自动清理键名中的空格
+                wordsData = results.data.map(row => {
+                    let newRow = {};
+                    Object.keys(row).forEach(key => newRow[key.trim()] = row[key]);
+                    return newRow;
                 });
+
                 if(wordsData.length > 0) {
                     render(wordsData);
-                    document.getElementById('countInfo').innerText = `已加载 ${wordsData.length} 个词条`;
+                    document.getElementById('countInfo').innerText = `✅ 成功加载 ${wordsData.length} 个词条`;
                 } else {
-                    document.getElementById('loader').innerText = "⚠️ 读到了文件，但里面好像没内容？";
+                    showError("⚠️ 文件已找到，但内容解析为空，请检查 CSV 格式。");
                 }
             },
             error: function(err) {
-                // 如果 /data 读不到，尝试 data (相对路径)
-                console.log("尝试备用路径...");
-                Papa.parse("data/words.csv", {
-                    download: true, header: true, skipEmptyLines: true,
-                    complete: function(res) { render(res.data); }
-                });
-                document.getElementById('loader').innerHTML = `❌ 无法读取 data/words.csv<br>请确保域名/${window.location.pathname.split('/')[1]}/data/words.csv 可以访问`;
+                console.error("加载失败:", err);
+                showError("❌ 无法读取 data/words.csv。请检查：<br>1. 文件夹名是否为小写 data<br>2. 文件名是否为 words.csv");
             }
         });
     }
 
+    function showError(msg) {
+        document.getElementById('loader').innerHTML = `<span style="color: #e74c3c;">${msg}</span>`;
+    }
+
     function render(list) {
         const tbody = document.getElementById('tbody');
-        tbody.innerHTML = list.slice(0, 300).map(item => `
+        if (list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px;">没有找到匹配的结果 😅</td></tr>';
+            return;
+        }
+
+        // 仅渲染前 200 条以保证性能，搜索时会自动更新
+        const displayList = list.slice(0, 200);
+        
+        tbody.innerHTML = displayList.map(item => `
             <tr>
                 <td class="char">${item.汉字 || '-'}</td>
-                <td style="color:#d35400"><b>${item.拼音 || '-'}</b></td>
-                <td style="color:#2980b9">${item.英文含义 || '-'}</td>
-                <td><b>${item.组词 || '-'}</b><br><small>${item.组词英文 || ''}</small></td>
-                <td style="font-size:0.9em">${item.造句 || '-'}<br><i style="color:#666">${item.造句英文 || ''}</i></td>
+                <td><span class="pinyin">${item.拼音 || '-'}</span></td>
+                <td><span class="english">${item.英文含义 || '-'}</span></td>
+                <td>
+                    <strong>${item.组词 || '-'}</strong><br>
+                    <small style="color:#666">${item.造句 || '-'}</small>
+                </td>
             </tr>
         `).join('');
     }
 
+    // 搜索过滤（防抖处理提升性能）
+    let timer;
     document.getElementById('searchInput').addEventListener('input', function(e) {
-        const val = e.target.value.trim().toUpperCase();
-        const filtered = wordsData.filter(item => 
-            Object.values(item).some(s => String(s).toUpperCase().includes(val))
-        );
-        render(filtered);
-        document.getElementById('countInfo').innerText = `检索到 ${filtered.length} 个词汇`;
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            const val = e.target.value.trim().toLowerCase();
+            const filtered = wordsData.filter(item => 
+                Object.values(item).some(s => String(s).toLowerCase().includes(val))
+            );
+            render(filtered);
+            document.getElementById('countInfo').innerText = `找到 ${filtered.length} 个匹配项`;
+        }, 200);
     });
 
     init();
 </script>
+
 </body>
 </html>
