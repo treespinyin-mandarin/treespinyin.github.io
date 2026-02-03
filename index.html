@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>汉字库搜索</title>
-    <!-- 1. 确保库文件在最上方加载 -->
+    <!-- 引入 PapaParse -->
     <script src="https://cdnjs.cloudflare.com"></script>
     <style>
         body { font-family: sans-serif; margin: 20px; background: #f4f7f6; }
@@ -13,7 +13,6 @@
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px; border: 1px solid #eee; text-align: left; }
         th { background: #4CAF50; color: white; }
-        tr:nth-child(even) { background: #fafafa; }
         .pinyin { color: #e67e22; font-weight: bold; }
     </style>
 </head>
@@ -30,27 +29,30 @@
     </div>
 
     <script>
-        // 核心：使用 window.onload 确保 PapaParse 库加载完再运行
-        window.onload = function() {
+        (function init() {
+            // 解决 "Papa is not defined" 的核心逻辑：循环检查库是否加载
+            if (typeof Papa === 'undefined') {
+                console.log("正在等待库加载...");
+                setTimeout(init, 100); 
+                return;
+            }
+
             let dictionary = [];
             const searchInput = document.getElementById('searchInput');
             const tbody = document.querySelector('#wordTable tbody');
 
-            // 2. 开始抓取 CSV 数据
+            // 读取数据
             Papa.parse("_data/words.csv", {
                 download: true,
                 header: true,
                 skipEmptyLines: true,
                 complete: function(results) {
                     dictionary = results.data;
-                    render(dictionary); // 初始显示全部
-                },
-                error: function(err) {
-                    console.error("CSV加载失败，请检查路径:", err);
+                    render(dictionary);
+                    console.log("数据加载成功！");
                 }
             });
 
-            // 3. 渲染表格函数
             function render(data) {
                 tbody.innerHTML = data.map(row => `
                     <tr>
@@ -63,7 +65,6 @@
                 `).join('');
             }
 
-            // 4. 实时搜索监听
             searchInput.addEventListener('input', function() {
                 const term = this.value.toUpperCase();
                 const filtered = dictionary.filter(row => 
@@ -71,7 +72,7 @@
                 );
                 render(filtered);
             });
-        };
+        })();
     </script>
 </body>
 </html>
