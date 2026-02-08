@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TreesPinyin | 自然生长的智能翻译体验</title>
+    <title>Trees Pinyin | 像森林一样自然的拼音交互体验</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-green: #2ecc71;
-            --dark-green: #27ae60;
+            --primary-green: #27ae60;
+            --dark-green: #1e8449;
             --tech-blue: #3498db;
             --text-main: #1a202c;
             --text-light: #718096;
@@ -20,7 +20,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
             color: var(--text-main);
             line-height: 1.6;
             background-color: var(--bg-white);
@@ -32,6 +32,7 @@
             top: 0;
             background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             z-index: 1000;
             padding: 1rem 5%;
             border-bottom: 1px solid rgba(0,0,0,0.05);
@@ -52,29 +53,47 @@
             text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--primary-green);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
         }
 
         .btn-primary {
             background: var(--primary-green);
             color: white;
             border: none;
-            padding: 0.7rem 1.5rem;
-            border-radius: 10px;
+            padding: 0.75rem 1.8rem;
+            border-radius: 12px;
             cursor: pointer;
             font-weight: 600;
             transition: var(--transition);
-            box-shadow: 0 4px 14px 0 rgba(46, 204, 113, 0.3);
+            box-shadow: 0 4px 14px 0 rgba(39, 174, 96, 0.3);
             text-decoration: none;
             display: inline-block;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            background: var(--dark-green);
+            box-shadow: 0 6px 20px 0 rgba(39, 174, 96, 0.4);
         }
 
         .btn-secondary {
             background: white;
             color: var(--text-main);
             border: 1px solid #e2e8f0;
-            padding: 0.7rem 1.5rem;
-            border-radius: 10px;
+            padding: 0.75rem 1.8rem;
+            border-radius: 12px;
             cursor: pointer;
             font-weight: 600;
             transition: var(--transition);
@@ -87,6 +106,7 @@
             border-color: var(--text-light);
         }
 
+        /* Hero Section */
         .hero {
             padding: 10rem 5% 6rem;
             text-align: center;
@@ -94,18 +114,18 @@
         }
 
         .hero h1 {
-            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-size: clamp(2.8rem, 6vw, 4.5rem);
             line-height: 1.1;
             margin-bottom: 1.5rem;
             font-weight: 800;
-            letter-spacing: -0.02em;
+            letter-spacing: -0.03em;
         }
 
         .hero p {
-            font-size: 1.25rem;
+            font-size: 1.3rem;
             color: var(--text-light);
-            max-width: 650px;
-            margin: 0 auto 3rem;
+            max-width: 700px;
+            margin: 0 auto 3.5rem;
         }
 
         .cta-group {
@@ -119,11 +139,11 @@
             display: flex;
             gap: 0.8rem;
             width: 100%;
-            max-width: 550px;
+            max-width: 580px;
             background: white;
-            padding: 8px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+            padding: 10px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.08);
             border: 1px solid #edf2f7;
         }
 
@@ -132,9 +152,11 @@
             padding: 1rem;
             border: none;
             outline: none;
-            font-size: 1rem;
+            font-size: 1.1rem;
+            padding-left: 1.5rem;
         }
 
+        /* Features Section */
         .features {
             padding: 8rem 5%;
             max-width: 1200px;
@@ -143,40 +165,47 @@
 
         .feature-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2.5rem;
         }
 
         .feature-card {
-            padding: 2.5rem;
-            border-radius: 24px;
+            padding: 3rem;
+            border-radius: 32px;
             background: var(--bg-gray);
             border: 1px solid #f1f5f9;
             transition: var(--transition);
         }
 
-        /* Amazon KDP Hint Style */
+        .feature-card:hover {
+            background: white;
+            transform: translateY(-8px);
+            box-shadow: 0 30px 60px -12px rgba(0,0,0,0.05);
+        }
+
+        /* Amazon KDP Section */
         .ecosystem-hint {
-            margin-top: 4rem;
-            padding: 2rem;
-            border-top: 1px dashed #e2e8f0;
+            margin-top: 6rem;
+            padding: 3rem;
+            border-top: 1px dashed #cbd5e0;
             text-align: center;
         }
 
-        .kdp-tag {
+        .kdp-badge {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
             background: #fff;
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            color: var(--text-light);
-            border: 1px solid #eee;
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            font-size: 1rem;
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
         }
 
         footer {
-            padding: 4rem 5%;
+            padding: 5rem 5% 3rem;
             background: #fff;
             text-align: center;
             border-top: 1px solid #eee;
@@ -184,74 +213,7 @@
 
         @media (max-width: 768px) {
             .waitlist-form { flex-direction: column; background: transparent; border: none; box-shadow: none; padding: 0; }
-            .waitlist-form input { border: 1px solid #eee; border-radius: 12px; margin-bottom: 0.5rem; }
-            .hero { padding-top: 6rem; }
+            .waitlist-form input { border: 1px solid #eee; border-radius: 14px; margin-bottom: 0.5rem; padding: 1.2rem; }
+            .hero { padding-top: 7rem; }
         }
     </style>
-</head>
-<body>
-
-    <nav>
-        <div class="nav-container">
-            <a href="#" class="logo">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 2L20.5 11L30 12.5L23 19L24.5 28.5L16 24L7.5 28.5L9 19L2 12.5L11.5 11L16 2Z" fill="#2ecc71"/></svg>
-                TreeTrans
-            </a>
-            <div class="nav-links">
-                <button class="btn-primary">立即预约演示</button>
-            </div>
-        </div>
-    </nav>
-
-    <section class="hero">
-        <h1>让沟通像森林一样<br><span style="color: var(--primary-green);">无界且自然</span></h1>
-        <p>TreeTrans 是一款为现代团队打造的语义级翻译工具。通过上下文感知的 AI 引擎，让协作不再有“翻译腔”。</p>
-        
-        <div class="cta-group">
-            <div class="waitlist-form">
-                <input type="email" placeholder="输入工作邮箱加入候补名单..." required>
-                <button class="btn-primary" style="padding: 1rem 2rem; border-radius: 12px;">加入早期访问</button>
-            </div>
-            
-            <a href="你的GoogleForm链接" target="_blank" class="btn-secondary">
-                🌐 Request Access to Chrome Extension (Beta)
-            </a>
-        </div>
-    </section>
-
-    <section class="features" id="features">
-        <div class="feature-grid">
-            <div class="feature-card">
-                <span style="font-size: 2rem;">🌳</span>
-                <h3 style="margin: 1rem 0;">上下文深度理解</h3>
-                <p style="color: var(--text-light);">不仅仅是句子。我们扫描整个项目背景，确保术语的一致性。</p>
-            </div>
-            <div class="feature-card">
-                <span style="font-size: 2rem;">⚡</span>
-                <h3 style="margin: 1rem 0;">极速实时协作</h3>
-                <p style="color: var(--text-light);">低延迟架构，支持多人同时编辑与翻译校对。</p>
-            </div>
-            <div class="feature-card">
-                <span style="font-size: 2rem;">🛡️</span>
-                <h3 style="margin: 1rem 0;">安全与隐私</h3>
-                <p style="color: var(--text-light);">企业级端到端加密，您的数据永远属于您自己。</p>
-            </div>
-        </div>
-
-        <div class="ecosystem-hint">
-            <div class="kdp-tag">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="orange"><path d="M21 4H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM3 18V6h5v12H3zm18 0h-5V6h5v12z"/></svg>
-                <span>Coming soon to <strong>Amazon KDP</strong></span>
-            </div>
-        </div>
-    </section>
-
-    <footer>
-        <div style="font-weight: 800; color: var(--text-main); margin-bottom: 1rem;">TreeTrans</div>
-        <p style="font-size: 0.8rem; color: var(--text-light);">
-            © 2026 TreeTrans AI Inc. · Built for the next generation of global teams.
-        </p>
-    </footer>
-
-</body>
-</html>
