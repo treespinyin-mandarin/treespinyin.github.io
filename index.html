@@ -3,146 +3,255 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>汉字万词搜索库</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <title>TreeTrans | 自然生长的智能翻译体验</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --main: #27ae60; --bg: #f4f7f6; }
-        body { font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--bg); margin: 0; padding: 15px; color: #333; }
-        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
-        h1 { text-align: center; color: var(--main); margin-bottom: 20px; }
-        
-        .search-area { position: sticky; top: 0; background: white; padding: 15px 0; z-index: 10; border-bottom: 1px solid #eee; }
-        input { width: 100%; padding: 16px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 18px; outline: none; transition: all 0.3s; box-sizing: border-box; }
-        input:focus { border-color: var(--main); box-shadow: 0 0 8px rgba(39, 174, 96, 0.2); }
+        :root {
+            --primary-green: #2ecc71;
+            --dark-green: #27ae60;
+            --tech-blue: #3498db;
+            --text-main: #1a202c;
+            --text-light: #718096;
+            --bg-white: #ffffff;
+            --bg-gray: #f7fafc;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-        .table-wrapper { overflow-x: auto; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; }
-        th { background: var(--main); color: white; padding: 15px; text-align: left; position: sticky; top: 0; }
-        td { padding: 15px; border-bottom: 1px solid #f0f0f0; line-height: 1.6; }
-        
-        .char { font-size: 2em; font-weight: bold; color: #2c3e50; }
-        .pinyin { color: #d35400; font-weight: bold; font-size: 1.1em; }
-        .english { color: #2980b9; font-weight: 500; }
-        .status { text-align: center; color: #7f8c8d; margin-top: 20px; font-size: 0.9em; padding: 20px; }
-        
-        /* 简单动画 */
-        tr { transition: background 0.2s; }
-        tr:hover { background: #f9fffb; }
-        @media (max-width: 600px) { .char { font-size: 1.5em; } td { padding: 10px; font-size: 14px; } }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            line-height: 1.6;
+            background-color: var(--bg-white);
+            overflow-x: hidden;
+        }
+
+        nav {
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+            padding: 1rem 5%;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--primary-green);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: 0 4px 14px 0 rgba(46, 204, 113, 0.3);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--text-main);
+            border: 1px solid #e2e8f0;
+            padding: 0.7rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-gray);
+            border-color: var(--text-light);
+        }
+
+        .hero {
+            padding: 10rem 5% 6rem;
+            text-align: center;
+            background: radial-gradient(circle at top, #f0fdf4 0%, #ffffff 100%);
+        }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-light);
+            max-width: 650px;
+            margin: 0 auto 3rem;
+        }
+
+        .cta-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .waitlist-form {
+            display: flex;
+            gap: 0.8rem;
+            width: 100%;
+            max-width: 550px;
+            background: white;
+            padding: 8px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
+            border: 1px solid #edf2f7;
+        }
+
+        .waitlist-form input {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .features {
+            padding: 8rem 5%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            padding: 2.5rem;
+            border-radius: 24px;
+            background: var(--bg-gray);
+            border: 1px solid #f1f5f9;
+            transition: var(--transition);
+        }
+
+        /* Amazon KDP Hint Style */
+        .ecosystem-hint {
+            margin-top: 4rem;
+            padding: 2rem;
+            border-top: 1px dashed #e2e8f0;
+            text-align: center;
+        }
+
+        .kdp-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: var(--text-light);
+            border: 1px solid #eee;
+        }
+
+        footer {
+            padding: 4rem 5%;
+            background: #fff;
+            text-align: center;
+            border-top: 1px solid #eee;
+        }
+
+        @media (max-width: 768px) {
+            .waitlist-form { flex-direction: column; background: transparent; border: none; box-shadow: none; padding: 0; }
+            .waitlist-form input { border: 1px solid #eee; border-radius: 12px; margin-bottom: 0.5rem; }
+            .hero { padding-top: 6rem; }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>📚 汉字万词库</h1>
-    
-    <div class="search-area">
-        <input type="text" id="searchInput" placeholder="🔍 输入汉字、拼音或英文含义搜索...">
-    </div>
+    <nav>
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 2L20.5 11L30 12.5L23 19L24.5 28.5L16 24L7.5 28.5L9 19L2 12.5L11.5 11L16 2Z" fill="#2ecc71"/></svg>
+                TreeTrans
+            </a>
+            <div class="nav-links">
+                <button class="btn-primary">立即预约演示</button>
+            </div>
+        </div>
+    </nav>
 
-    <div class="table-wrapper">
-        <table id="wordTable">
-            <thead>
-                <tr>
-                    <th>汉字</th>
-                    <th>拼音</th>
-                    <th>意思 (English)</th>
-                    <th>组词 & 解释</th>
-                </tr>
-            </thead>
-            <tbody id="tbody">
-                <tr><td colspan="4" id="loader" style="text-align:center; padding: 40px;">⏳ 正在努力加载云端词库...</td></tr>
-            </tbody>
-        </table>
-    </div>
-    <div id="countInfo" class="status"></div>
-</div>
-
-<script>
-    let wordsData = [];
-
-    // 智能获取数据路径
-    function getCsvPath() {
-        // 如果是自定义域名，通常在根目录；如果是 github.io/repo，需要相对路径
-        return "data/words.csv"; 
-    }
-
-    function init() {
-        if (typeof Papa === 'undefined') {
-            setTimeout(init, 200);
-            return;
-        }
-
-        Papa.parse(getCsvPath(), {
-            download: true,
-            header: true,
-            skipEmptyLines: true,
-            encoding: "UTF-8",
-            complete: function(results) {
-                // 自动清理键名中的空格
-                wordsData = results.data.map(row => {
-                    let newRow = {};
-                    Object.keys(row).forEach(key => newRow[key.trim()] = row[key]);
-                    return newRow;
-                });
-
-                if(wordsData.length > 0) {
-                    render(wordsData);
-                    document.getElementById('countInfo').innerText = `✅ 成功加载 ${wordsData.length} 个词条`;
-                } else {
-                    showError("⚠️ 文件已找到，但内容解析为空，请检查 CSV 格式。");
-                }
-            },
-            error: function(err) {
-                console.error("加载失败:", err);
-                showError("❌ 无法读取 data/words.csv。请检查：<br>1. 文件夹名是否为小写 data<br>2. 文件名是否为 words.csv");
-            }
-        });
-    }
-
-    function showError(msg) {
-        document.getElementById('loader').innerHTML = `<span style="color: #e74c3c;">${msg}</span>`;
-    }
-
-    function render(list) {
-        const tbody = document.getElementById('tbody');
-        if (list.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px;">没有找到匹配的结果 😅</td></tr>';
-            return;
-        }
-
-        // 仅渲染前 200 条以保证性能，搜索时会自动更新
-        const displayList = list.slice(0, 200);
+    <section class="hero">
+        <h1>让沟通像森林一样<br><span style="color: var(--primary-green);">无界且自然</span></h1>
+        <p>TreeTrans 是一款为现代团队打造的语义级翻译工具。通过上下文感知的 AI 引擎，让协作不再有“翻译腔”。</p>
         
-        tbody.innerHTML = displayList.map(item => `
-            <tr>
-                <td class="char">${item.汉字 || '-'}</td>
-                <td><span class="pinyin">${item.拼音 || '-'}</span></td>
-                <td><span class="english">${item.英文含义 || '-'}</span></td>
-                <td>
-                    <strong>${item.组词 || '-'}</strong><br>
-                    <small style="color:#666">${item.造句 || '-'}</small>
-                </td>
-            </tr>
-        `).join('');
-    }
+        <div class="cta-group">
+            <div class="waitlist-form">
+                <input type="email" placeholder="输入工作邮箱加入候补名单..." required>
+                <button class="btn-primary" style="padding: 1rem 2rem; border-radius: 12px;">加入早期访问</button>
+            </div>
+            
+            <a href="你的GoogleForm链接" target="_blank" class="btn-secondary">
+                🌐 Request Access to Chrome Extension (Beta)
+            </a>
+        </div>
+    </section>
 
-    // 搜索过滤（防抖处理提升性能）
-    let timer;
-    document.getElementById('searchInput').addEventListener('input', function(e) {
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-            const val = e.target.value.trim().toLowerCase();
-            const filtered = wordsData.filter(item => 
-                Object.values(item).some(s => String(s).toLowerCase().includes(val))
-            );
-            render(filtered);
-            document.getElementById('countInfo').innerText = `找到 ${filtered.length} 个匹配项`;
-        }, 200);
-    });
+    <section class="features" id="features">
+        <div class="feature-grid">
+            <div class="feature-card">
+                <span style="font-size: 2rem;">🌳</span>
+                <h3 style="margin: 1rem 0;">上下文深度理解</h3>
+                <p style="color: var(--text-light);">不仅仅是句子。我们扫描整个项目背景，确保术语的一致性。</p>
+            </div>
+            <div class="feature-card">
+                <span style="font-size: 2rem;">⚡</span>
+                <h3 style="margin: 1rem 0;">极速实时协作</h3>
+                <p style="color: var(--text-light);">低延迟架构，支持多人同时编辑与翻译校对。</p>
+            </div>
+            <div class="feature-card">
+                <span style="font-size: 2rem;">🛡️</span>
+                <h3 style="margin: 1rem 0;">安全与隐私</h3>
+                <p style="color: var(--text-light);">企业级端到端加密，您的数据永远属于您自己。</p>
+            </div>
+        </div>
 
-    init();
-</script>
+        <div class="ecosystem-hint">
+            <div class="kdp-tag">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="orange"><path d="M21 4H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM3 18V6h5v12H3zm18 0h-5V6h5v12z"/></svg>
+                <span>Coming soon to <strong>Amazon KDP</strong></span>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div style="font-weight: 800; color: var(--text-main); margin-bottom: 1rem;">TreeTrans</div>
+        <p style="font-size: 0.8rem; color: var(--text-light);">
+            © 2026 TreeTrans AI Inc. · Built for the next generation of global teams.
+        </p>
+    </footer>
 
 </body>
 </html>
